@@ -1,0 +1,40 @@
+---
+- name: Add group "jboss"
+  group: name=jboss
+
+- name: Add user "jboss"
+  user: name=jboss group=jboss home=/home/jboss/
+
+- name: Copy over EAP zip to host
+  copy: src={{ eap_file_name }} dest=/tmp/
+
+- name: Creates directory
+  file: path=/opt/jboss/eap state=directory owner=jboss group=jboss mode=0774
+
+- name: Creates directory
+  file: path=/var/run/jboss-eap state=directory owner=jboss group=jboss mode=0774
+  
+- name: Extract archive
+  unarchive: dest=/opt/jboss/eap src=/tmp/{{ eap_file_name }} creates=/opt/jboss/eap/jboss-eap-{{ eap_version }} copy=no force=no
+
+- name: Copying standalone.xml configuration file
+  template: src=standalone.xml dest=/opt/jboss/eap/jboss-eap-{{ eap_version }}/standalone/configuration/ force=yes
+  notify: restart jboss
+
+- name: Change ownership of JBoss installation
+  file: path=/opt/jboss/eap/jboss-eap-7.0 owner=jboss group=jboss state=directory recurse=yes
+
+- name: Copy over EAP startup file to host
+  copy: src=jbosseap7.service dest=/usr/lib/systemd/system/ owner=root group=root mode=0644
+
+- name: Create symlink to JBoss EAP 7 service
+  file: src=/usr/lib/systemd/system/jbosseap7.service dest=/etc/systemd/system/multi-user.target.wants/jbosseap7.service state=link
+
+- name: Copy over EAP configuration file to host
+  copy: src=jboss-eap.conf dest=/etc/default/jboss-eap.conf owner=jboss group=jboss mode=0664
+
+- name: Copy over EAP startup script to host
+  copy: src=jboss-eap-rhel.sh dest=/opt/jboss/eap/jboss-eap-{{ eap_version }}/bin/init.d/jboss-eap.conf owner=jboss group=jboss mode=0664
+
+- name: Enable JBoss to be started at boot
+  service: name=jbosseap7 enabled=yes state=started

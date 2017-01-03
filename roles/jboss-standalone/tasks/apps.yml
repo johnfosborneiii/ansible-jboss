@@ -1,0 +1,6 @@
+---
+- name: Copy application WAR file to host
+  copy: src=ROOT.war dest=/tmp/ owner=jboss group=jboss
+
+- name: Deploy HelloWorld to JBoss
+  command: cp -p /tmp/ROOT.war /opt/jboss/eap/jboss-eap-{{ eap_version }}/standalone/deployments/

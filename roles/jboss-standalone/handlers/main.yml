@@ -1,0 +1,6 @@
+---
+- name: restart jboss
+  service: name=jbosseap7 state=restarted
+
+- name: restart iptables
+  service: name=iptables state=restarted
